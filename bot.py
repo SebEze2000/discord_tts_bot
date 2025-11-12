@@ -41,7 +41,7 @@ PHRASE_FILES: dict[int, str] = {
 }
 TMP_TTS = os.path.join(AUDIO_DIR, "_tts_last.mp3")
 
-FFMPEG_PATH = None  # usar FFmpeg del sistema
+FFMPEG_PATH = os.path.join(BASE_DIR, "ffmpeg", "bin", "ffmpeg.exe")
 IDLE_DISCONNECT_SECONDS = 0
 
 avisos = {
