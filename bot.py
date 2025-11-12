@@ -7,20 +7,21 @@ from pathlib import Path
 from typing import Optional
 
 # --- Parche para Python 3.13 (audioop eliminado) ---
+import importlib, sys
+
 try:
-    import audioop_lts as audioop
-except ImportError:
+    audioop = importlib.import_module("audioop_lts.audioop_lts")
+except ModuleNotFoundError:
     try:
-        import audioop_lts.audioop as audioop
-    except ImportError:
-        try:
-            import audioop_lts_fix as audioop
-        except ImportError:
-            import importlib
-            audioop = importlib.import_module("audioop_lts")
-import sys
-sys.modules["audioop"] = audioop
+        audioop = importlib.import_module("audioop_lts")
+    except ModuleNotFoundError:
+        print("⚠️ No se pudo importar audioop_lts. El audio puede no funcionar.")
+        audioop = None
+
+if audioop:
+    sys.modules["audioop"] = audioop
 # ----------------------------------------------------
+
 
 import discord
 from discord.ext import tasks, commands
