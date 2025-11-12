@@ -6,6 +6,15 @@ from datetime import datetime, time
 from pathlib import Path
 from typing import Optional
 
+# --- Parche para Python 3.13 (audioop eliminado) ---
+try:
+    import audioop_lts as audioop
+    import sys
+    sys.modules["audioop"] = audioop
+except Exception as e:
+    print(f"⚠️ No se pudo cargar audioop_lts: {e}")
+# ----------------------------------------------------
+
 import discord
 from discord.ext import tasks, commands
 from gtts import gTTS
