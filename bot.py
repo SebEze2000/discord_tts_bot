@@ -9,10 +9,17 @@ from typing import Optional
 # --- Parche para Python 3.13 (audioop eliminado) ---
 try:
     import audioop_lts as audioop
-    import sys
-    sys.modules["audioop"] = audioop
-except Exception as e:
-    print(f"⚠️ No se pudo cargar audioop_lts: {e}")
+except ImportError:
+    try:
+        import audioop_lts.audioop as audioop
+    except ImportError:
+        try:
+            import audioop_lts_fix as audioop
+        except ImportError:
+            import importlib
+            audioop = importlib.import_module("audioop_lts")
+import sys
+sys.modules["audioop"] = audioop
 # ----------------------------------------------------
 
 import discord
@@ -22,8 +29,8 @@ from gtts import gTTS
 # =========================
 # 🧰 CONFIGURACIÓN
 # =========================
-TOKEN = os.getenv("TOKEN")  # Render env var
-VOICE_CHANNEL_ID = 1256002493951770697
+TOKEN = os.getenv("TOKEN")  # Variable de entorno en Render
+VOICE_CHANNEL_ID = 1256002493951770697  # Canal de voz
 
 TEXT_CHANNEL_PHRASES: dict[int, str] = {
     1284336904095010826: "premio en espera",
@@ -46,7 +53,8 @@ AUDIO_DIR = os.path.join(BASE_DIR, "audio")
 Path(AUDIO_DIR).mkdir(exist_ok=True)
 
 PHRASE_FILES: dict[int, str] = {
-    cid: os.path.join(AUDIO_DIR, f"tts_fixed_{cid}.mp3") for cid in TEXT_CHANNEL_PHRASES.keys()
+    cid: os.path.join(AUDIO_DIR, f"tts_fixed_{cid}.mp3")
+    for cid in TEXT_CHANNEL_PHRASES.keys()
 }
 TMP_TTS = os.path.join(AUDIO_DIR, "_tts_last.mp3")
 
@@ -122,6 +130,7 @@ async def play_path(full_path: str):
         await asyncio.sleep(0.1)
 
     done = asyncio.Event()
+
     def after_playback(error):
         if error:
             print(f"💥 Error en reproducción: {error}")
@@ -142,9 +151,14 @@ def tts_to_file(text: str, out_path: str, lang: str = "es", tld: str = "com.ar")
 @bot.event
 async def on_ready():
     print(f"✅ Conectado como {bot.user}")
+    await asyncio.sleep(3)  # Espera para evitar el error 4006
     ch = bot.get_channel(VOICE_CHANNEL_ID)
     if isinstance(ch, discord.VoiceChannel):
-        await ensure_voice_connected(ch)
+        try:
+            await ensure_voice_connected(ch)
+            print(f"🎧 Conectado al canal de voz: {ch.name}")
+        except Exception as e:
+            print(f"💥 Error al conectar al canal de voz: {e}")
     check_time.start()
 
 @tasks.loop(seconds=10)
